@@ -104,8 +104,6 @@ PulseShield follows a video-processing workflow that combines computer vision, f
 
 ## 👥 Team Members
 
-## 👥 Team Members
-
 We are a team of enthusiastic developers passionate about technology, innovation, and problem-solving. Together, we collaborated to develop **PulseShield**, exploring a proactive approach to digital identity protection.
 
 ### Meet the Team
