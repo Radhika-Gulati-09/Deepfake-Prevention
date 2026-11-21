@@ -103,3 +103,29 @@ PulseShield follows a video-processing workflow that combines computer vision, f
 ## 🎥 Project Demonstration
 
 ## 👥 Team Members
+
+## 👥 Team Members
+
+We are a team of enthusiastic developers passionate about technology, innovation, and problem-solving. Together, we collaborated to develop **PulseShield**, exploring a proactive approach to digital identity protection.
+
+### Meet the Team
+
+#### 1. [Radhika]
+- **Role:** [Team Leader]
+- **Contribution:** [research and idea]
+- **GitHub:** [https://github.com/Radhika-Gulati-09]
+
+#### 2. [Shreya]
+- **Role:** [developer]
+- **Contribution:** [backend and execution]
+- **GitHub:** [https://github.com/shreya118502]
+
+#### 3. [Diksha]
+- **Role:** [researcher]
+- **Contribution:** [frontend and presentation]
+- **GitHub:** [https://github.com/dikhz]
+
+#### 4. [Shruti]
+- **Role:** [executor]
+- **Contribution:** [git hub and exection]
+- **GitHub:** [https://github.com/shrutigarg3009-debug]
