@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Veil — Experimental Browser-Based Video Protection Prototype</title>
+  <meta name="description" content="A research prototype applying subtle, temporally consistent perturbations to face videos. Processed 100% locally in your browser.">
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='44' fill='%2307090e' stroke='%2300f5a0' stroke-width='8'/><path d='M30 50 Q50 25 70 50 Q50 75 30 50' fill='none' stroke='%2300f5a0' stroke-width='6'/><circle cx='50' cy='50' r='10' fill='%2300f5a0'/></svg>">
+</head>
+<body>
+  <!-- Accessibility Skip Link -->
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+
+  <!-- ARIA Live Announcement Region -->
+  <div id="sr-announcements" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
+
+  <!-- Header / Navigation -->
+  <header class="site-header">
+    <div class="header-inner container">
+      <div class="brand">
+        <div class="brand-logo" aria-hidden="true">
+          <svg viewBox="0 0 32 32" width="28" height="28" fill="none">
+            <rect width="32" height="32" rx="8" fill="#141B2D" stroke="rgba(255,255,255,0.12)"/>
+            <path d="M7 16 C11 10, 21 10, 25 16 C21 22, 11 22, 7 16 Z" stroke="#00F5A0" stroke-width="2" stroke-linecap="round"/>
+            <circle cx="16" cy="16" r="3.5" fill="#00F5A0"/>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <span class="brand-name">VEIL</span>
+          <span class="brand-badge">RESEARCH PROTOTYPE v0.9</span>
+        </div>
+      </div>
+
+      <nav class="nav-links" aria-label="Quick links">
+        <a href="#how-it-works" class="nav-link">How It Works</a>
+        <a href="#transparency-section" class="nav-link">Limitations & Truth</a>
+        <a href="#privacy-note" class="nav-link">Privacy</a>
+        <button id="btn-quick-sample" class="btn btn-sm btn-outline-mint" title="Generate an animated synthetic test face video">
+          <svg viewBox="0 0 20 20" width="16" height="16" fill="currentColor" aria-hidden="true">
+            <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z"/>
+            <path fill-rule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clip-rule="evenodd"/>
+          </svg>
+          Try Sample Video
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main id="main-content" class="main-content">
+    
+    <!-- Hero / Intro Section -->
+    <section class="hero-section container">
+      <div class="hero-badge">
+        <span class="pulse-dot" aria-hidden="true"></span>
+        <span>Local In-Browser Processing &bull; Zero Server Uploads</span>
+      </div>
+      <h1 class="hero-title">Add a layer of friction before your video travels.</h1>
+      <p class="hero-subtitle">
+        Experiment with subtle, temporally consistent video perturbations designed to interfere with some face-manipulation workflows. Results vary by model, resolution, and platform recompression.
+      </p>
+    </section>
+
+    <!-- Compatibility Alert Banner (dynamically populated if needed) -->
+    <div id="compat-banner" class="container alert-banner hidden" role="alert">
+      <div class="alert-icon" aria-hidden="true">&#9888;</div>
+      <div class="alert-content">
+        <strong id="compat-title">Browser Compatibility Note</strong>
+        <p id="compat-message"></p>
+      </div>
+    </div>
+
+    <!-- Core App Container: Handles States (Upload, Configure, Processing, Compare) -->
+    <section class="app-workspace container" aria-label="Video Protection Studio">
+      
+      <!-- STATE 1: Upload / Dropzone State -->
+      <div id="state-upload" class="app-state-card active">
+        <div class="dropzone" id="dropzone" tabindex="0" role="region" aria-label="Video file drop zone">
+          <input type="file" id="file-input" class="file-input" accept="video/mp4,video/webm,video/quicktime,video/x-m4v" aria-label="Upload video file">
+          
+          <div class="dropzone-content">
+            <div class="dropzone-icon" aria-hidden="true">
+              <svg viewBox="0 0 48 48" width="56" height="56" fill="none">
+                <circle cx="24" cy="24" r="22" stroke="rgba(0,245,160,0.3)" stroke-width="2" stroke-dasharray="4 4"/>
+                <path d="M24 14v18M17 21l7-7 7 7" stroke="#00F5A0" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M14 34h20" stroke="#9DA8BE" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <h2 class="dropzone-title">Drag & drop your face video here</h2>
+            <p class="dropzone-desc">or click anywhere in this area to browse your files</p>
+            
+            <div class="dropzone-specs">
+              <span class="spec-tag">MP4 &bull; WebM &bull; MOV</span>
+              <span class="spec-tag">Recommended: &le; 60s &bull; &le; 100MB</span>
+              <span class="spec-tag">100% Client-Side Privacy</span>
+            </div>
+
+            <div class="dropzone-actions">
+              <button type="button" class="btn btn-secondary" id="btn-browse">
+                <svg viewBox="0 0 20 20" width="16" height="16" fill="currentColor" aria-hidden="true">
+                  <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h4a1 1 0 01.8.4l1.6 2.133A1 1 0 0011.2 6H16a1 1 0 011 1v8a1 1 0 01-1 1H4a1 1 0 01-1-1V4z" clip-rule="evenodd"/>
+                </svg>
+                Browse Video Files
+              </button>
+              <span class="divider-text">or</span>
+              <button type="button" class="btn btn-outline" id="btn-generate-sample">
+                Generate Interactive Face Clip
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Privacy & Security Micro-Note -->
+        <div class="privacy-pill">
+          <svg viewBox="0 0 16 16" width="14" height="14" fill="#00F5A0" aria-hidden="true">
+            <path fill-rule="evenodd" d="M8 0c-.69 0-1.843.265-2.928.56-1.11.3-2.229.655-2.887.87a1.54 1.54 0 0 0-1.044 1.262c-.596 4.477.787 7.795 2.464 9.99 1.579 2.062 3.45 3.036 4.248 3.317.07.025.144.025.214 0 .798-.28 2.669-1.255 4.248-3.317 1.677-2.195 3.06-5.513 2.464-9.99a1.54 1.54 0 0 0-1.044-1.263 62.467 62.467 0 0 0-2.887-.87C9.843.266 8.69 0 8 0zm0 5a1.5 1.5 0 0 1 .5 2.915V10.5a.5.5 0 0 1-1 0V7.915A1.5 1.5 0 0 1 8 5z"/>
+          </svg>
+          <span><strong>Your media never leaves your device:</strong> All frames are decoded, perturbed, and re-encoded locally inside your browser's WebCodecs/Canvas memory.</span>
+        </div>
+      </div>
+
+      <!-- STATE 2: Video Selected & Ready to Configure -->
+      <div id="state-ready" class="app-state-card hidden">
+        <div class="ready-header">
+          <div class="file-info-bar">
+            <div class="file-icon" aria-hidden="true">&#127916;</div>
+            <div class="file-details">
+              <h3 id="info-filename" class="file-name">video.mp4</h3>
+              <div class="file-meta-pills">
+                <span id="info-filesize" class="meta-pill">Size: --</span>
+                <span id="info-duration" class="meta-pill">Duration: --</span>
+                <span id="info-dimensions" class="meta-pill">Resolution: --</span>
+                <span id="info-audio" class="meta-pill">Audio: Checking...</span>
+              </div>
+            </div>
+            <div class="file-actions">
+              <button id="btn-change-video" class="btn btn-sm btn-ghost" title="Select a different video">
+                Change Video
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="ready-body grid-2col">
+          <!-- Video Preview Column -->
+          <div class="preview-panel">
+            <div class="video-container" id="source-preview-box">
+              <video id="source-video-preview" controls playsinline preload="metadata">
+                Your browser does not support the video tag.
+              </video>
+            </div>
+            <div class="caption-text">Original video preview (playback verified)</div>
+          </div>
+
+          <!-- Configuration & Perturbation Settings Column -->
+          <div class="config-panel">
+            <h4 class="config-title">Protection Parameters</h4>
+            <p class="config-desc">
+              Choose the intensity and characteristics of the experimental perturbation. Higher strengths increase noise visibility.
+            </p>
+
+            <!-- Strength Presets -->
+            <div class="param-group">
+              <label class="param-label" id="label-strength">Perturbation Strength & Visual Fidelity</label>
+              <div class="segmented-control" role="radiogroup" aria-labelledby="label-strength">
+                <button type="button" class="segment-btn" data-preset="pristine" role="radio" aria-checked="false">
+                  Pristine (~1.5%)
+                </button>
+                <button type="button" class="segment-btn active" data-preset="balanced" role="radio" aria-checked="true">
+                  Balanced (~2.5%)
+                </button>
+                <button type="button" class="segment-btn" data-preset="friction" role="radio" aria-checked="false">
+                  Friction (~4.5%)
+                </button>
+              </div>
+
+              <!-- Fine-tune Slider -->
+              <div class="slider-wrapper">
+                <div class="slider-header">
+                  <span class="slider-label">Intensity Level:</span>
+                  <span id="strength-val-display" class="slider-val">2.5% (High Fidelity)</span>
+                </div>
+                <input type="range" id="input-strength" min="0.5" max="10" step="0.1" value="2.5" class="custom-range" aria-label="Perturbation intensity percentage">
+                <div class="slider-ticks" aria-hidden="true">
+                  <span>Invisible (0.5%)</span>
+                  <span>Pristine (2.5%)</span>
+                  <span>Prominent (10%)</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Perturbation Profile / Pattern -->
+            <div class="param-group">
+              <label for="select-pattern" class="param-label">Perturbation Technique</label>
+              <select id="select-pattern" class="custom-select">
+                <option value="adversarial-wave" selected>Spatio-Temporal Coherent Wave (Luminance Neutral)</option>
+                <option value="chroma-decorrelation">Chromatic Lattice Phase-Shift</option>
+                <option value="multiscale-gradient">Multi-Scale Adversarial Texture</option>
+              </select>
+              <span class="param-hint">
+                Preserves exact perceptual luminance (ΔY ≈ 0) while applying subtle chromatic phase shifts to disrupt neural net feature maps.
+              </span>
+            </div>
+
+            <!-- Face Region Targeting & Skin Preservation -->
+            <div class="param-group">
+              <div class="checkbox-wrapper">
+                <input type="checkbox" id="check-face-targeting" checked class="custom-checkbox">
+                <label for="check-face-targeting" class="checkbox-label">
+                  <strong>Target Facial Region With Soft Feathering</strong>
+                  <span class="sub-label">Focuses perturbation on facial landmarks with smooth Gaussian edge falloff to avoid rectangular seams.</span>
+                </label>
+              </div>
+              <div class="checkbox-wrapper" style="margin-top: 0.5rem;">
+                <input type="checkbox" id="check-preserve-skin" checked class="custom-checkbox">
+                <label for="check-preserve-skin" class="checkbox-label">
+                  <strong>Perceptual Skin Smoothing (Anti-Grain Protection)</strong>
+                  <span class="sub-label">Attenuates perturbation on flat uniform skin (cheeks/forehead) to prevent graininess while keeping maximum friction on eyes, nose, lips, and facial contours.</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Audio Handling Option -->
+            <div class="param-group" id="audio-settings-group">
+              <div class="checkbox-wrapper">
+                <input type="checkbox" id="check-include-audio" checked class="custom-checkbox">
+                <label for="check-include-audio" class="checkbox-label">
+                  <strong>Preserve Original Audio Track</strong>
+                  <span class="sub-label" id="audio-option-status">Muxes the original audio stream into the protected output video.</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Processing Speed & Resolution -->
+            <div class="param-group">
+              <label for="select-resolution" class="param-label">Export Video Quality & Resolution</label>
+              <select id="select-resolution" class="custom-select">
+                <option value="native" selected>Pristine Native Resolution (Full 1080p+ @ 24 Mbps) — Maximum Visual Quality</option>
+                <option value="720p">High Definition 720p (@ 14 Mbps) — Fast & Sharp</option>
+                <option value="fast">High Speed 480p (@ 8 Mbps) — Lightweight</option>
+              </select>
+              <span class="param-hint">
+                Native mode preserves 100% of your camera's original dimensions and encodes at up to 24 Mbps for artifact-free clarity.
+              </span>
+            </div>
+
+            <!-- Launch Button -->
+            <div class="config-actions">
+              <button id="btn-start-processing" class="btn btn-primary btn-lg">
+                <svg viewBox="0 0 20 20" width="18" height="18" fill="currentColor" aria-hidden="true">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"/>
+                </svg>
+                Apply Veil Protection
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STATE 3: Active Processing State -->
+      <div id="state-processing" class="app-state-card hidden" role="region" aria-label="Processing video">
+        <div class="processing-header">
+          <div class="spinner-ring" aria-hidden="true"></div>
+          <div>
+            <h3 class="processing-title">Applying Experimental Perturbation...</h3>
+            <p class="processing-subtitle">Computing temporally coherent phase shifts & re-encoding frames locally.</p>
+          </div>
+        </div>
+
+        <div class="processing-body">
+          <!-- Progress Bar & Status -->
+          <div class="progress-container">
+            <div class="progress-bar-track">
+              <div id="process-progress-bar" class="progress-bar-fill" style="width: 0%" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
+            <div class="progress-meta">
+              <span id="process-percent" class="progress-percent">0%</span>
+              <span id="process-stats" class="progress-stats">Frame 0 / 0 &bull; -- fps</span>
+              <span id="process-eta" class="progress-eta">Calculating remaining time...</span>
+            </div>
+          </div>
+
+          <!-- Real-Time Processing Preview Viewport -->
+          <div class="live-monitor-grid">
+            <div class="live-frame-box">
+              <span class="live-badge">Live Frame Output</span>
+              <canvas id="processing-canvas" class="processing-canvas" width="640" height="360"></canvas>
+            </div>
+            
+            <div class="live-delta-box">
+              <span class="live-badge badge-mint">Perturbation Layer (10&times; Amplified)</span>
+              <canvas id="delta-canvas" class="delta-canvas" width="640" height="360"></canvas>
+            </div>
+          </div>
+
+          <!-- Cancel Control -->
+          <div class="processing-actions">
+            <button id="btn-cancel-processing" class="btn btn-outline-danger">
+              <svg viewBox="0 0 20 20" width="16" height="16" fill="currentColor" aria-hidden="true">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+              </svg>
+              Cancel Processing
+            </button>
+            <span class="cancel-note">Canceling will safely abort encoding and restore your configuration.</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- STATE 4: Completed with Synchronized Comparison & Download -->
+      <div id="state-completed" class="app-state-card hidden">
+        <div class="completed-banner">
+          <div class="success-badge">
+            <svg viewBox="0 0 20 20" width="20" height="20" fill="currentColor" aria-hidden="true">
+              <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+            </svg>
+            <span>Perturbation Completed</span>
+          </div>
+          <div class="completed-meta">
+            <span id="completed-stat-time">Processed in -- s</span> &bull; 
+            <span id="completed-stat-size">Output Size: -- MB</span> &bull; 
+            <span id="completed-stat-codec">Format: WebM/VP9</span>
+          </div>
+        </div>
+
+        <!-- Comparison Header Controls -->
+        <div class="comparator-toolbar">
+          <div class="comparator-modes" role="radiogroup" aria-label="Comparison View Mode">
+            <button id="mode-split" class="btn btn-sm btn-mode active" role="radio" aria-checked="true">
+              <svg viewBox="0 0 20 20" width="16" height="16" fill="currentColor" aria-hidden="true">
+                <path d="M5 3a2 2 0 00-2 2v10a2 2 0 002 2h4V3H5zM11 17h4a2 2 0 002-2V5a2 2 0 00-2-2h-4v14z"/>
+              </svg>
+              Split Slider
+            </button>
+            <button id="mode-side" class="btn btn-sm btn-mode" role="radio" aria-checked="false">
+              <svg viewBox="0 0 20 20" width="16" height="16" fill="currentColor" aria-hidden="true">
+                <path d="M2 4.5A2.5 2.5 0 014.5 2h3A2.5 2.5 0 0110 4.5v11A2.5 2.5 0 017.5 18h-3A2.5 2.5 0 012 15.5v-11zM12.5 2A2.5 2.5 0 0010 4.5v11a2.5 2.5 0 002.5 2.5h3a2.5 2.5 0 002.5-2.5v-11A2.5 2.5 0 0015.5 2h-3z"/>
+              </svg>
+              Side-by-Side
+            </button>
+            <button id="mode-delta" class="btn btn-sm btn-mode" role="radio" aria-checked="false">
+              <svg viewBox="0 0 20 20" width="16" height="16" fill="currentColor" aria-hidden="true">
+                <path fill-rule="evenodd" d="M4 2a2 2 0 00-2 2v11a3 3 0 106 0V4a2 2 0 00-2-2H4zm1 14a1 1 0 100-2 1 1 0 000 2zm5-1.757l4.9-4.9a2 2 0 000-2.828L13.485 5.1a2 2 0 00-2.828 0L10 5.757v8.486zM16 18H9.071l6-6H16a2 2 0 012 2v2a2 2 0 01-2 2z" clip-rule="evenodd"/>
+              </svg>
+              Difference Map (10&times;)
+            </button>
+          </div>
+
+          <!-- Synchronized Playback Controls -->
+          <div class="sync-playback-controls">
+            <button id="btn-sync-play" class="btn btn-sm btn-outline-mint" title="Toggle Synchronized Play / Pause (Spacebar)">
+              <svg id="icon-play" viewBox="0 0 20 20" width="16" height="16" fill="currentColor">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"/>
+              </svg>
+              <span id="text-play-label">Play</span>
+            </button>
+            <button id="btn-sync-restart" class="btn btn-sm btn-ghost" title="Restart Playback">
+              <svg viewBox="0 0 20 20" width="16" height="16" fill="currentColor">
+                <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd"/>
+              </svg>
+              Restart
+            </button>
+            <span id="sync-timecode" class="timecode-display">00:00 / 00:00</span>
+          </div>
+        </div>
+
+        <!-- Master Comparison Stage -->
+        <div class="comparator-stage">
+          <!-- View 1: Split Slider -->
+          <div id="view-split-container" class="split-viewport active">
+            <!-- Background: Original Video -->
+            <div class="video-layer original-layer">
+              <span class="video-tag tag-left">Original Video</span>
+              <video id="comp-video-orig" playsinline preload="auto" loop muted></video>
+            </div>
+
+            <!-- Foreground: Protected Video with Clip Path -->
+            <div id="split-overlay-layer" class="video-layer protected-layer">
+              <span class="video-tag tag-right">Veil Protected</span>
+              <video id="comp-video-prot" playsinline preload="auto" loop muted></video>
+            </div>
+
+            <!-- Draggable Split Handle -->
+            <div id="split-handle" class="split-divider" tabindex="0" role="slider" aria-label="Before and after split divider" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50">
+              <div class="handle-line"></div>
+              <div class="handle-knob">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+                  <path d="M8 5v14l-5-7 5-7zm8 14V5l5 7-5 7z"/>
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <!-- View 2: Side-by-Side -->
+          <div id="view-side-container" class="side-viewport hidden">
+            <div class="side-col">
+              <div class="side-tag">Original Video</div>
+              <div class="side-video-box">
+                <video id="side-video-orig" playsinline preload="auto" loop muted></video>
+              </div>
+            </div>
+            <div class="side-col">
+              <div class="side-tag tag-mint">Veil Protected</div>
+              <div class="side-video-box">
+                <video id="side-video-prot" playsinline preload="auto" loop muted></video>
+              </div>
+            </div>
+          </div>
+
+          <!-- View 3: Delta / Difference Map -->
+          <div id="view-delta-container" class="delta-viewport hidden">
+            <div class="delta-box-wrapper">
+              <div class="delta-tag">Live Perturbation Amplitude Map (10&times; Amplified)</div>
+              <canvas id="comp-delta-canvas" class="comp-delta-canvas" width="640" height="360"></canvas>
+              <p class="delta-caption">
+                Visualizing pixel differences $|Protected - Original| \times 10$ centered at 128-neutral gray.
+                Notice the smooth spatial feathering and lack of temporal jitter.
+              </p>
+            </div>
+          </div>
+
+          <!-- Common Scrub Bar -->
+          <div class="scrub-bar-container">
+            <input type="range" id="comp-scrubber" min="0" max="100" step="0.1" value="0" class="custom-scrubber" aria-label="Synchronized video timeline scrubber">
+          </div>
+        </div>
+
+        <!-- Download & Session Actions Bar -->
+        <div class="completion-actions-bar">
+          <div class="download-group">
+            <a id="btn-download-video" class="btn btn-primary btn-lg" download="veil_protected.webm">
+              <svg viewBox="0 0 20 20" width="18" height="18" fill="currentColor" aria-hidden="true">
+                <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"/>
+              </svg>
+              Download Protected Video
+            </a>
+            <span class="download-format-hint" id="download-format-text">Saved as WebM/VP9 (Full Quality)</span>
+          </div>
+
+          <div class="session-group">
+            <button id="btn-reprocess" class="btn btn-outline" title="Adjust perturbation settings and process again">
+              Adjust Settings & Reprocess
+            </button>
+            <button id="btn-reset-session" class="btn btn-ghost btn-danger-hover" title="Revoke all temporary object URLs and clear memory">
+              <svg viewBox="0 0 20 20" width="16" height="16" fill="currentColor" aria-hidden="true">
+                <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"/>
+              </svg>
+              Clear Session & Memory
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- Detailed Research & Transparency Section: What this does / What it doesn't -->
+    <section id="transparency-section" class="transparency-section container">
+      <div class="section-badge">RESEARCH INTEGRITY & HONEST DISCLOSURES</div>
+      <h2 class="section-title">Understanding Video Adversarial Protection</h2>
+      <p class="section-desc">
+        Veil is an experimental research prototype exploring defensive visual perturbations. We believe in total transparency about both potential friction and operational limitations.
+      </p>
+
+      <div class="truth-grid">
+        <!-- What this does -->
+        <div class="truth-card card-does">
+          <div class="truth-header">
+            <div class="truth-icon icon-check" aria-hidden="true">&#10003;</div>
+            <h3 class="truth-title">What Veil Does</h3>
+          </div>
+          <ul class="truth-list">
+            <li>
+              <strong>Applies Spatio-Temporal Phase Shifts:</strong> Generates continuous, low-frequency carrier waves that modulate high-frequency pixel gradients without causing perceptual frame-to-frame flicker.
+            </li>
+            <li>
+              <strong>Smooth Facial Saliency Blending:</strong> Targets facial landmark zones with Gaussian radial falloff, minimizing artifacts in static backgrounds while concentrating entropy where face-swapping encoders operate.
+            </li>
+            <li>
+              <strong>Preserves Original Audio:</strong> Synchronously streams and re-encodes your original audio track directly in the browser when supported.
+            </li>
+            <li>
+              <strong>Guarantees Zero Server Transmission:</strong> 100% client-side execution. Your video bytes and biometrics are never uploaded, logged, or inspected by any cloud server.
+            </li>
+          </ul>
+        </div>
+
+        <!-- What this doesn't -->
+        <div class="truth-card card-doesnt">
+          <div class="truth-header">
+            <div class="truth-icon icon-cross" aria-hidden="true">&#10005;</div>
+            <h3 class="truth-title">What Veil Does Not Do</h3>
+          </div>
+          <ul class="truth-list">
+            <li>
+              <strong>No Universal Immunity:</strong> It does <em>not</em> guarantee prevention of all deepfakes, face reenactment, or diffusion-based generative video manipulation.
+            </li>
+            <li>
+              <strong>Vulnerable to Heavy Platform Re-Encoding:</strong> Aggressive social platform compression (e.g. downscaling to 480p, H.264 high quantization, or blurring) acts as a low-pass filter that can wash out subtle perturbations.
+            </li>
+            <li>
+              <strong>No "Magic Green Pixel" AI Kryptonite:</strong> We reject misleading claims that shifting arbitrary green channels foils AI. Robust adversarial resistance requires multi-scale feature disruption.
+            </li>
+            <li>
+              <strong>Not a Deepfake Detection System:</strong> This tool modifies videos defensively; it does not classify or detect whether an existing video has already been altered.
+            </li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- How It Works Technical Walkthrough -->
+    <section id="how-it-works" class="tech-section container">
+      <h2 class="section-title text-center">How the Browser Processing Engine Works</h2>
+      <div class="pipeline-grid">
+        <div class="pipeline-step">
+          <div class="step-num">01</div>
+          <h4 class="step-title">Frame Extraction & Face Tracking</h4>
+          <p class="step-desc">
+            Decodes incoming video frames in browser memory. Detects the face centroid using browser FaceDetector or adaptive skin chrominance with an exponential moving average (EMA) filter to prevent bounding-box jitter.
+          </p>
+        </div>
+
+        <div class="pipeline-step">
+          <div class="step-num">02</div>
+          <h4 class="step-title">Temporally Coherent Perturbation</h4>
+          <p class="step-desc">
+            Computes a continuous mathematical carrier wave $P(x,y,t)$. By anchoring spatial phase to time $t$, adjacent frames vary smoothly, completely eliminating high-frequency temporal flicker.
+          </p>
+        </div>
+
+        <div class="pipeline-step">
+          <div class="step-num">03</div>
+          <h4 class="step-title">Saliency Feathering</h4>
+          <p class="step-desc">
+            Applies a smooth cosine-bell spatial mask centered at the face, focusing perturbation on facial keypoints while fading to zero across outer borders to prevent harsh rectangular edge seams.
+          </p>
+        </div>
+
+        <div class="pipeline-step">
+          <div class="step-num">04</div>
+          <h4 class="step-title">Client-Side Stream Re-Encoding</h4>
+          <p class="step-desc">
+            Renders perturbed frames to an internal canvas pipeline, captures the video stream, mixes in the original audio via Web Audio API, and encodes the final downloadable file with MediaRecorder.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Privacy & Security Statement -->
+    <section id="privacy-note" class="privacy-section container">
+      <div class="privacy-card">
+        <div class="privacy-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="32" height="32" fill="#00F5A0">
+            <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/>
+          </svg>
+        </div>
+        <div class="privacy-text">
+          <h3>Absolute Client-Side Privacy Architecture</h3>
+          <p>
+            Veil has <strong>no tracking scripts, no telemetry, and no remote video backend</strong>. Your video is loaded strictly into your browser's private memory sandbox. When you click "Clear Session & Memory" or close this browser tab, all temporary object URLs and decoded frame buffers are instantly purged and garbage collected.
+          </p>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Site Footer -->
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <div class="footer-left">
+        <span class="footer-title">Veil Research Prototype</span>
+        <span class="footer-sub">&bull; Open Browser-Based Video Defense Exploration</span>
+      </div>
+      <div class="footer-right">
+        <span>Designed for research, educational experimentation, and transparency.</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Confirmation / Reset Dialog -->
+  <dialog id="dialog-confirm-reset" class="custom-dialog">
+    <form method="dialog" class="dialog-content">
+      <h3 class="dialog-title">Clear Session & Memory?</h3>
+      <p class="dialog-desc">
+        This will revoke all active object URLs, release allocated video memory, and return you to the upload screen. Your downloaded file (if saved) remains on your computer.
+      </p>
+      <div class="dialog-actions">
+        <button type="button" class="btn btn-ghost" id="btn-dialog-cancel">Keep Current Video</button>
+        <button type="button" class="btn btn-danger" id="btn-dialog-confirm">Clear All & Reset</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Scripts -->
+  <script src="js/face-detector.js"></script>
+  <script src="js/perturbation-engine.js"></script>
+  <script src="js/processor.js"></script>
+  <script src="js/comparator.js"></script>
+  <script src="js/sample-generator.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
